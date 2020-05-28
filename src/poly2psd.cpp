@@ -12,7 +12,11 @@
 #include <unordered_map>
 #include <argtable2.h>
 #include "/home/erik/codee/cmli/cmli.hpp"
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "poly2psd.c"
+
+#ifdef I
+#undef I
+#endif
 
 
 int main(int argc, char *argv[])

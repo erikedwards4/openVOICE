@@ -29,18 +29,22 @@ This is a C++ project that is heavily used in computational paralinguistics and 
 However, it is no longer open-source, and despite excellent C++ software engineering overall,
 it is not super-optimized for efficiency and is not intuitive to use for typical use cases.
 
-OpenVOICE is meant to be maximally efficient, very intuitive, well-documented with help information for
-simple command-line tools, and to be modular such that one can use lower-level functions in novel
-combinations to easily make new features. It allows input/output in several important C++ tensor formats:
+OpenVOICE is meant to be maximally efficient, very intuitive, and well-documented with help information for
+simple command-line tools. It is also modular such that one can use lower-level functions in novel
+combinations to easily make new features, or just higher-level functions ("mfcc") to use typical features.
+
+Input/output is supported for NumPy tensors and several C++ tensor formats:
 Armadillo (http://arma.sourceforge.net/), ArrayFire (https://arrayfire.com/), a minimal format
 for Eigen (http://eigen.tuxfamily.org/) and NumPy (https://numpy.org/).
 The later means that input/output can be piped directly to snippets of Python code that use NumPy!
 
 
 ## Dependencies
-Must have argtable2 installed (available by apt-get). For Ubuntu:
+Requires argtable2, openBLAS and LAPACKE. For Ubuntu, these are available by apt-get:
 ```
-sudo apt-get -y install libargtable2-0
+sudo apt-get install libargtable2-0
+sudo apt-get install libblas3 libopenblas-base
+sudo apt-get install liblapack3 liblapacke
 ```
 
 
@@ -73,7 +77,7 @@ Or:
 
 
 ## Contributing
-This is currently a repo only for viewing the project in progress.
+This is currently only to view the project in progress.
 
 
 ## License

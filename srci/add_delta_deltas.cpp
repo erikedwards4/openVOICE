@@ -1,5 +1,5 @@
 //Includes
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "add_delta_deltas.c"
 
 //Declarations
 const valarray<uint8_t> oktypes = {1,2};

@@ -12,7 +12,11 @@
 #include <unordered_map>
 #include <argtable2.h>
 #include "/home/erik/codee/cmli/cmli.hpp"
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "stft.c"
+
+#ifdef I
+#undef I
+#endif
 
 
 int main(int argc, char *argv[])
@@ -47,7 +51,7 @@ int main(int argc, char *argv[])
     descr += "But if fs is entered in kHz, then also use kHz here.\n";
     descr += "\n";
     descr += "Use -c (--c0) to give the first center sample [default=0].\n";
-    descr += "This is the sample number at the center of the first frame.\n";
+    descr += "This is the sample number (within X) at the center of the first frame.\n";
     descr += "\n";
     descr += "Use -n (--nfft) to specify transform length [default=nextpow2(L)].\n";
     descr += "Frames of X will be zero-padded as necessary to match nfft.\n";

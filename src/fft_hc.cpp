@@ -12,7 +12,11 @@
 #include <unordered_map>
 #include <argtable2.h>
 #include "/home/erik/codee/cmli/cmli.hpp"
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "fft_hc.c"
+
+#ifdef I
+#undef I
+#endif
 
 
 int main(int argc, char *argv[])
@@ -158,7 +162,7 @@ int main(int argc, char *argv[])
         catch (...) { cerr << progstr+": " << __LINE__ << errstr << "problem allocating for output file (Y)" << endl; return 1; }
         try { ifs1.read(reinterpret_cast<char*>(X),i1.nbytes()); }
         catch (...) { cerr << progstr+": " << __LINE__ << errstr << "problem reading input file 1 (X)" << endl; return 1; }
-        if (ov::fft_s(Y,X,i1.iscolmajor(),int(i1.R),int(i1.C),dim,nfft)) { cerr << progstr+": " << __LINE__ << errstr << "problem during function call" << endl; return 1; }
+        if (ov::fft_hc_s(Y,X,i1.iscolmajor(),int(i1.R),int(i1.C),dim,nfft)) { cerr << progstr+": " << __LINE__ << errstr << "problem during function call" << endl; return 1; }
         if (wo1)
         {
             try { ofs1.write(reinterpret_cast<char*>(Y),o1.nbytes()); }
@@ -175,7 +179,7 @@ int main(int argc, char *argv[])
         catch (...) { cerr << progstr+": " << __LINE__ << errstr << "problem allocating for output file (Y)" << endl; return 1; }
         try { ifs1.read(reinterpret_cast<char*>(X),i1.nbytes()); }
         catch (...) { cerr << progstr+": " << __LINE__ << errstr << "problem reading input file 1 (X)" << endl; return 1; }
-        if (ov::fft_d(Y,X,i1.iscolmajor(),int(i1.R),int(i1.C),dim,nfft)) { cerr << progstr+": " << __LINE__ << errstr << "problem during function call" << endl; return 1; }
+        if (ov::fft_hc_d(Y,X,i1.iscolmajor(),int(i1.R),int(i1.C),dim,nfft)) { cerr << progstr+": " << __LINE__ << errstr << "problem during function call" << endl; return 1; }
         if (wo1)
         {
             try { ofs1.write(reinterpret_cast<char*>(Y),o1.nbytes()); }

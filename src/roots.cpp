@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <argtable2.h>
 #include "/home/erik/codee/cmli/cmli.hpp"
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "roots.c"
 
 
 int main(int argc, char *argv[])

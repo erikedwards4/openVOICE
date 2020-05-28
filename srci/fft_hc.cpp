@@ -1,5 +1,5 @@
 //Includes
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "fft_hc.c"
 
 //Declarations
 const valarray<uint8_t> oktypes = {1,2};
@@ -74,7 +74,7 @@ if (i1.T==1)
     catch (...) { cerr << progstr+": " << __LINE__ << errstr << "problem allocating for output file (Y)" << endl; return 1; }
     try { ifs1.read(reinterpret_cast<char*>(X),i1.nbytes()); }
     catch (...) { cerr << progstr+": " << __LINE__ << errstr << "problem reading input file 1 (X)" << endl; return 1; }
-    if (ov::fft_s(Y,X,i1.iscolmajor(),int(i1.R),int(i1.C),dim,nfft)) { cerr << progstr+": " << __LINE__ << errstr << "problem during function call" << endl; return 1; }
+    if (ov::fft_hc_s(Y,X,i1.iscolmajor(),int(i1.R),int(i1.C),dim,nfft)) { cerr << progstr+": " << __LINE__ << errstr << "problem during function call" << endl; return 1; }
     if (wo1)
     {
         try { ofs1.write(reinterpret_cast<char*>(Y),o1.nbytes()); }

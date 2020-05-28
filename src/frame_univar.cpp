@@ -12,7 +12,11 @@
 #include <unordered_map>
 #include <argtable2.h>
 #include "/home/erik/codee/cmli/cmli.hpp"
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "frame_univar.c"
+
+#ifdef I
+#undef I
+#endif
 
 
 int main(int argc, char *argv[])
@@ -53,7 +57,7 @@ int main(int argc, char *argv[])
     descr += "but this is usually in Hz (if fs is in kHz, then use kHz for fr).\n";
     descr += "\n";
     descr += "Use -c (--c0) to give the first center sample [default=0].\n";
-    descr += "This is an integer in units of samples.\n";
+    descr += "This is the sample number (within X) at the center of the first frame.\n";
     descr += "\n";
     descr += "Output (Y) has the same data type and file format as X,\n";
     descr += "with data efficiently copied from X into Y.\n";

@@ -1,181 +1,237 @@
 #@author Erik Edwards
 #@date 2019-2020
 
-#openVOICE is my own library of C functions for voice processing in C.
-#This is the Makefile to make static (.a) and dynamic (.so) libraries.
-
-#To use the .o object files, or the .a or .so libraries:
-#Do this once: sudo ln -s $(OV)/libopenvoice.a /usr/lib/libopenvoice.a
-#Or this once: sudo ln -s $(OV)/libopenvoice.so /usr/lib/libopenvoice.so
-
-#For libopenvoice.a:
-#ar r creates new archive or adds file(s) to archive
-#ar c suppresses stderr message when creating archive
-#ar s forces regeneration of symbol table
-#ar v is for verbose
+#openVOICE is my own library of functions for voice processing in C and C++.
+#This is the makefile for the CMLI wrappers to use openVOICE at the command-line.
 
 SHELL=/bin/bash
 
-OV=/home/erik/codee/openvoice
+ss=srci/srci2src
 
-CC=gcc
+CC=clang++
+STD=-std=c++11
 
-ifeq ($(CC),$(filter $(CC),clang gcc))
-	STD=-std=c99
+ifeq ($(CC),clang++)
+	WFLAG=-Weverything -Wno-c++98-compat -Wno-padded -Wno-old-style-cast
 else
-	STD=-std=c++11
+	WFLAG=-Wall -Wextra
 endif
 
-ifeq ($(CC),clang)
-	WFLAGS=-Weverything -Wno-old-style-cast
-else ifeq ($(CC),clang++)
-	WFLAGS=-Weverything -Wno-old-style-cast -Wno-deprecated
-else
-	WFLAGS=-Wall -Wextra
-endif
+#The -lfftw3f -lfftw3 is not required by all programs, unless using blanket #include openvoice.h.
+#In the later case, all functions must have the same library flags.
 
-CFLAGS=$(WFLAGS) -O3 $(STD) -march=native -fopenmp -fPIC
+CFLAGS=$(WFLAG) -O3 $(STD) -march=native -Ic
+#LIBS=-largtable2 -lopenblas -llapacke -llapack -lfftw3f -lfftw3 -lm
 
-#Use these (via make a or make so) to make a final library
-AR=ar crs libopenvoice.a $(OV)/{basic,dsp,pre,wins,freqs,window,stft,spectrogram,ccs,deltas,ar_poly,ac_lp,lsf_lar,zcs_lcs}/obj/*.o
-SO=$(CC) -shared -o libopenvoice.so $(OV)/{basic,dsp,pre,wins,freqs,window,stft,spectrogram,ccs,deltas,ar_poly,ac_lp,lsf_lar,zcs_lcs}/obj/*.o
 
-openVOICE: Basic DSP Pre Wins Freqs Window STFT Spectrogram CCs Deltas AR_Poly AC_LP LSF_LAR ZCs_LCs #Functionals 
-	$(AR)
-	$(SO)
+openVOICE: Basic Pre Wins Freqs Window STFT Spectrogram CCs Deltas AR_Poly AC_LP LSF_LAR ZCs_LCs
+	rm -f 7 obj/*.o
 
-Basic: mean0 stdev1 zscore abs square cmp_ascend cmp_descend #median
-mean0: basic/src/mean0.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-stdev1: basic/src/stdev1.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-zscore: basic/src/zscore.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-abs: basic/src/abs.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-square: basic/src/square.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-cmp_ascend: basic/src/cmp_ascend.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-cmp_descend: basic/src/cmp_descend.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
-median: basic/src/median.c; $(CC) -c $^ -o basic/obj/$@.o $(CFLAGS)
 
-DSP: fft fir iir #medfilt fft_matmul
-fft: dsp/src/fft.c; $(CC) -c $^ -o dsp/obj/$@.o $(CFLAGS)
-fft_matmul: dsp/src/fft_matmul.c; $(CC) -c $^ -o dsp/obj/$@.o $(CFLAGS)
-fir: dsp/src/fir.c; $(CC) -c $^ -o dsp/obj/$@.o $(CFLAGS)
-iir: dsp/src/iir.c; $(CC) -c $^ -o dsp/obj/$@.o $(CFLAGS)
-medfilt: dsp/src/medfilt.c; $(CC) -c $^ -o dsp/obj/$@.o $(CFLAGS)
+Basic: mean0 stdev1 zscore abs square fft fir iir
+mean0: srci/mean0.cpp c/mean0.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+stdev1: srci/stdev1.cpp c/stdev1.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+zscore: srci/zscore.cpp c/zscore.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+abs: srci/abs.cpp c/abs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
+square: srci/square.cpp c/square.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
+fft: srci/fft.cpp c/fft.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+fir: srci/fir.cpp c/fir.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+iir: srci/iir.cpp c/iir.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
 
-Pre: rms_scale preemph #dither
-rms_scale: pre/src/rms_scale.c; $(CC) -c $^ -o pre/obj/$@.o $(CFLAGS)
-preemph: pre/src/preemph.c; $(CC) -c $^ -o pre/obj/$@.o $(CFLAGS)
-#dither: pre/src/dither.c; $(CC) -c $^ -o pre/obj/$@.o $(CFLAGS)
 
-Wins: rectangular triangular bartlett hann hamming blackman blackmanharris flattop povey #tukey
-rectangular: wins/src/rectangular.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-triangular: wins/src/triangular.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-bartlett: wins/src/bartlett.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-hann: wins/src/hann.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-hamming: wins/src/hamming.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-blackman: wins/src/blackman.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-blackmanharris: wins/src/blackmanharris.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-flattop: wins/src/flattop.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-povey: wins/src/povey.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
-tukey: wins/src/tukey.c; $(CC) -c $^ -o wins/obj/$@.o $(CFLAGS)
+Pre: preemph rms_scale #dither
+preemph: srci/preemph.cpp c/preemph.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2
+rms_scale: srci/rms_scale.cpp c/rms_scale.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+dither: srci/dither.cpp c/dither.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
 
-Freqs: interp1q convert_freqs get_cfs get_stft_freqs get_cfs_T #get_cns
-interp1q: freqs/src/interp1q.c; $(CC) -c $^ -o freqs/obj/$@.o $(CFLAGS)
-convert_freqs: freqs/src/convert_freqs.c; $(CC) -c $^ -o freqs/obj/$@.o $(CFLAGS)
-get_cfs: freqs/src/get_cfs.c; $(CC) -c $^ -o freqs/obj/$@.o $(CFLAGS)
-get_stft_freqs: freqs/src/get_stft_freqs.c; $(CC) -c $^ -o freqs/obj/$@.o $(CFLAGS)
-get_cfs_T: freqs/src/get_cfs_T.c; $(CC) -c $^ -o freqs/obj/$@.o $(CFLAGS)
+
+Wins: rectangular triangular bartlett hann hamming blackman blackmanharris flattop povey tukey
+rectangular: srci/rectangular.cpp c/rectangular.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+triangular: srci/triangular.cpp c/triangular.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+bartlett: srci/bartlett.cpp c/bartlett.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+hann: srci/hann.cpp c/hann.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+hamming: srci/hamming.cpp c/hamming.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+blackman: srci/blackman.cpp c/blackman.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+blackmanharris: srci/blackmanharris.cpp c/blackmanharris.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+flattop: srci/flattop.cpp c/flattop.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+povey: srci/povey.cpp c/povey.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+tukey: srci/tukey.cpp c/tukey.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+
+
+Freqs: convert_freqs get_cfs get_stft_freqs get_cfs_T #get_cns
+convert_freqs: srci/convert_freqs.cpp c/convert_freqs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+get_cfs: srci/get_cfs.cpp c/get_cfs.c c/convert_freqs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+get_stft_freqs: srci/get_stft_freqs.cpp c/get_stft_freqs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2
+get_cfs_T: srci/get_cfs_T.cpp c/get_cfs_T.c c/convert_freqs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+
 
 Window: frame_univar apply_win window_univar
-frame_univar: window/src/frame_univar.c; $(CC) -c window/src/$@.c -o window/obj/$@.o $(CFLAGS)
-apply_win: window/src/apply_win.c; $(CC) -c window/src/$@.c -o window/obj/$@.o $(CFLAGS)
-window_univar: window/src/window_univar.c; $(CC) -c window/src/$@.c -o window/obj/$@.o $(CFLAGS)
+frame_univar: srci/frame_univar.cpp c/frame_univar.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+apply_win: srci/apply_win.cpp c/apply_win.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+window_univar: srci/window_univar.cpp c/window_univar.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
 
-STFT: fft_hc hc_square fft_squared stft #stft2
-fft_hc: stft/src/fft_hc.c; $(CC) -c $^ -o stft/obj/$@.o $(CFLAGS)
-hc_square: stft/src/hc_square.c; $(CC) -c $^ -o stft/obj/$@.o $(CFLAGS)
-fft_squared: stft/src/fft_squared.c; $(CC) -c $^ -o stft/obj/$@.o $(CFLAGS)
-stft: stft/src/stft.c; $(CC) -c $^ -o stft/obj/$@.o $(CFLAGS)
-stft2: stft/src/stft2.c; $(CC) -c $^ -o stft/obj/$@.o $(CFLAGS)
+
+STFT: fft_hc hc_square fft_squared stft
+fft_hc: srci/fft_hc.cpp c/fft_hc.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+hc_square: srci/hc_square.cpp c/hc_square.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lfftw3f -lfftw3 -lm
+fft_squared: srci/fft_squared.cpp c/fft_squared.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+stft: srci/stft.cpp c/stft.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+
 
 Spectrogram: get_cns get_spectrogram_T_mat apply_spectrogram_T_mat pow_compress spectrogram
-get_cns: spectrogram/src/get_cns.c; $(CC) -c $^ -o spectrogram/obj/$@.o $(CFLAGS)
-abs2: spectrogram/src/abs2.c; $(CC) -c $^ -o spectrogram/obj/$@.o $(CFLAGS)
-get_spectrogram_T_mat: spectrogram/src/get_spectrogram_T_mat.c; $(CC) -c $^ -o spectrogram/obj/$@.o $(CFLAGS)
-apply_spectrogram_T_mat: spectrogram/src/apply_spectrogram_T_mat.c; $(CC) -c $^ -o spectrogram/obj/$@.o $(CFLAGS)
-pow_compress: spectrogram/src/pow_compress.c; $(CC) -c $^ -o spectrogram/obj/$@.o $(CFLAGS)
-spectrogram: spectrogram/src/spectrogram.c; $(CC) -c $^ -o spectrogram/obj/$@.o $(CFLAGS)
+get_cns: srci/get_cns.cpp c/get_cns.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
+get_spectrogram_T_mat: srci/get_spectrogram_T_mat.cpp c/get_spectrogram_T_mat.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+apply_spectrogram_T_mat: srci/apply_spectrogram_T_mat.cpp c/apply_spectrogram_T_mat.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+pow_compress: srci/pow_compress.cpp c/pow_compress.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
+spectrogram: srci/spectrogram.cpp c/spectrogram.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+
 
 CCs: dct dct_inplace lifter get_ccs mfccs
-dct: ccs/src/dct.c; $(CC) -c $^ -o ccs/obj/$@.o $(CFLAGS)
-dct_inplace: ccs/src/dct_inplace.c; $(CC) -c $^ -o ccs/obj/$@.o $(CFLAGS)
-lifter: ccs/src/lifter.c; $(CC) -c $^ -o ccs/obj/$@.o $(CFLAGS)
-get_ccs: ccs/src/get_ccs.c; $(CC) -c $^ -o ccs/obj/$@.o $(CFLAGS)
-mfccs: ccs/src/mfccs.c; $(CC) -c $^ -o ccs/obj/$@.o $(CFLAGS)
+dct: srci/dct.cpp c/dct.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+dct_inplace: srci/dct_inplace.cpp c/dct_inplace.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+lifter: srci/lifter.cpp c/lifter.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+get_ccs: srci/get_ccs.cpp c/get_ccs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+mfccs: srci/mfccs.cpp c/mfccs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
 
-Deltas: get_deltas add_deltas get_delta_deltas add_delta_deltas
-get_deltas: deltas/src/get_deltas.c; $(CC) -c $^ -o deltas/obj/$@.o $(CFLAGS)
-add_deltas: deltas/src/add_deltas.c; $(CC) -c $^ -o deltas/obj/$@.o $(CFLAGS)
-get_delta_deltas: deltas/src/get_delta_deltas.c; $(CC) -c $^ -o deltas/obj/$@.o $(CFLAGS)
-add_delta_deltas: deltas/src/add_delta_deltas.c; $(CC) -c $^ -o deltas/obj/$@.o $(CFLAGS)
 
-AR_Poly: roots poly poly2roots roots2poly ar2poly poly2ar ar2rc rc2ar poly2rc rc2poly ar2psd poly2psd
-roots: ar_poly/src/roots.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-poly: ar_poly/src/poly.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-poly2roots: ar_poly/src/poly2roots.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-roots2poly: ar_poly/src/roots2poly.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-ar2poly: ar_poly/src/ar2poly.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-poly2ar: ar_poly/src/poly2ar.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-ar2rc: ar_poly/src/ar2rc.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-rc2ar: ar_poly/src/rc2ar.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-poly2rc: ar_poly/src/poly2rc.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-rc2poly: ar_poly/src/rc2poly.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-ar2psd: ar_poly/src/ar2psd.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
-poly2psd: ar_poly/src/poly2psd.c; $(CC) -c $^ -o ar_poly/obj/$@.o $(CFLAGS)
+Deltas: get_deltas get_delta_deltas add_deltas add_delta_deltas
+get_deltas: srci/get_deltas.cpp c/get_deltas.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+get_delta_deltas: srci/get_delta_deltas.cpp c/get_delta_deltas.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+add_deltas: srci/add_deltas.cpp c/add_deltas.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+add_delta_deltas: srci/add_delta_deltas.cpp c/add_delta_deltas.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
 
-AC_LP: autocorr autocorr_fft sig2ac sig2ac_fft ac2ar_levdurb ac2poly_levdurb sig2ar_levdurb sig2poly_levdurb sig2ar_burg sig2poly_burg ac2rc ac2cc ac2mvdr
-autocorr: ac_lp/src/autocorr.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-autocorr_fft: ac_lp/src/autocorr_fft.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-sig2ac: ac_lp/src/sig2ac.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-sig2ac_fft: ac_lp/src/sig2ac_fft.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-ac2ar_levdurb: ac_lp/src/ac2ar_levdurb.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-ac2poly_levdurb: ac_lp/src/ac2poly_levdurb.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-sig2ar_levdurb: ac_lp/src/sig2ar_levdurb.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-sig2poly_levdurb: ac_lp/src/sig2poly_levdurb.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-sig2ar_burg: ac_lp/src/sig2ar_burg.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-sig2poly_burg: ac_lp/src/sig2poly_burg.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-ac2rc: ac_lp/src/ac2rc.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-ac2cc: ac_lp/src/ac2cc.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
-ac2mvdr: ac_lp/src/ac2mvdr.c; $(CC) -c $^ -o ac_lp/obj/$@.o $(CFLAGS)
+
+AR_Poly: poly2roots roots2poly poly2ar ar2poly ar2rc rc2ar poly2rc rc2poly ar2psd poly2psd
+poly2roots: srci/poly2roots.cpp c/poly2roots.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -llapacke -lm
+roots2poly: srci/roots2poly.cpp c/roots2poly.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+poly2ar: srci/poly2ar.cpp c/poly2ar.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+ar2poly: srci/ar2poly.cpp c/ar2poly.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+ar2rc: srci/ar2rc.cpp c/ar2rc.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+rc2ar: srci/rc2ar.cpp c/rc2ar.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+poly2rc: srci/poly2rc.cpp c/poly2rc.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+rc2poly: srci/rc2poly.cpp c/rc2poly.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+ar2psd: srci/ar2psd.cpp c/ar2psd.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+poly2psd: srci/poly2psd.cpp c/poly2psd.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+
+
+AC_LP: autocorr autocorr_fft sig2ac sig2ac_fft ac2ar_levdurb ac2poly_levdurb sig2poly_levdurb sig2ar_levdurb sig2ar_burg sig2poly_burg ac2rc ac2cc ac2mvdr
+autocorr: srci/autocorr.cpp c/autocorr.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+autocorr_fft: srci/autocorr_fft.cpp c/autocorr_fft.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+sig2ac: srci/sig2ac.cpp c/sig2ac.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+sig2ac_fft: srci/sig2ac_fft.cpp c/sig2ac_fft.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+ac2ar_levdurb: srci/ac2ar_levdurb.cpp c/ac2ar_levdurb.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+ac2poly_levdurb: srci/ac2poly_levdurb.cpp c/ac2poly_levdurb.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+sig2ar_levdurb: srci/sig2ar_levdurb.cpp c/sig2ar_levdurb.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+sig2poly_levdurb: srci/sig2poly_levdurb.cpp c/sig2poly_levdurb.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+sig2ar_burg: srci/sig2ar_burg.cpp c/sig2ar_burg.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+sig2poly_burg: srci/sig2poly_burg.cpp c/sig2poly_burg.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+ac2rc: srci/ac2rc.cpp c/ac2rc.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+ac2cc: srci/ac2cc.cpp c/ac2cc.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+ac2mvdr: srci/ac2mvdr.cpp c/ac2mvdr.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lfftw3f -lfftw3 -lm
+
 
 LSF_LAR: ar2lsf lsf2ar poly2lsf lsf2poly rc2lar lar2rc
-ar2lsf: lsf_lar/src/ar2lsf.c; $(CC) -c $^ -o lsf_lar/obj/$@.o $(CFLAGS)
-lsf2ar: lsf_lar/src/lsf2ar.c; $(CC) -c $^ -o lsf_lar/obj/$@.o $(CFLAGS)
-poly2lsf: lsf_lar/src/poly2lsf.c; $(CC) -c $^ -o lsf_lar/obj/$@.o $(CFLAGS)
-lsf2poly: lsf_lar/src/lsf2poly.c; $(CC) -c $^ -o lsf_lar/obj/$@.o $(CFLAGS)
-rc2lar: lsf_lar/src/rc2lar.c; $(CC) -c $^ -o lsf_lar/obj/$@.o $(CFLAGS)
-lar2rc: lsf_lar/src/lar2rc.c; $(CC) -c $^ -o lsf_lar/obj/$@.o $(CFLAGS)
+ar2lsf: srci/ar2lsf.cpp c/ar2lsf.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -llapacke -lm
+lsf2ar: srci/lsf2ar.cpp c/lsf2ar.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+poly2lsf: srci/poly2lsf.cpp c/poly2lsf.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -llapacke -lm
+lsf2poly: srci/lsf2poly.cpp c/lsf2poly.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+rc2lar: srci/rc2lar.cpp c/rc2lar.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
+lar2rc: srci/lar2rc.cpp c/lar2rc.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
+
 
 ZCs_LCs: zcs lcs mcs zcr lcr mcr zcr_windowed lcr_windowed mcr_windowed
-zcs: zcs_lcs/src/zcs.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-lcs: zcs_lcs/src/lcs.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-mcs: zcs_lcs/src/mcs.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-zcr: zcs_lcs/src/zcr.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-lcr: zcs_lcs/src/lcr.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-mcr: zcs_lcs/src/mcr.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-zcr_windowed: zcs_lcs/src/zcr_windowed.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-lcr_windowed: zcs_lcs/src/lcr_windowed.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
-mcr_windowed: zcs_lcs/src/mcr_windowed.c; $(CC) -c $^ -o zcs_lcs/obj/$@.o $(CFLAGS)
+zcs: srci/zcs.cpp c/zcs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2
+lcs: srci/lcs.cpp c/lcs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2
+mcs: srci/mcs.cpp c/mcs.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
+zcr: srci/zcr.cpp c/zcr.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+lcr: srci/lcr.cpp c/lcr.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+mcr: srci/mcr.cpp c/mcr.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+zcr_windowed: srci/zcr_windowed.cpp c/zcr_windowed.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+lcr_windowed: srci/lcr_windowed.cpp c/lcr_windowed.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+mcr_windowed: srci/mcr_windowed.cpp c/mcr_windowed.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
 
-Functionals: moments #cumulants prctiles lcrs
-moments: functionals/src/moments.c; $(CC) -c $^ -o functionals/obj/$@.o $(CFLAGS)
-cumulants: functionals/src/cumulants.c; $(CC) -c $^ -o functionals/obj/$@.o $(CFLAGS)
-prctiles: functionals/src/prctiles.c; $(CC) -c $^ -o functionals/obj/$@.o $(CFLAGS)
-lcrs: functionals/src/lcrs.c; $(CC) -c $^ -o functionals/obj/$@.o $(CFLAGS)
-
-#Use these (i.e. make a or make so) to make a final library
-a: libopenvoice.a; $(AR)
-so: libopenvoice.so; $(SO)
-
-clean:
-	find $(OV) -type f -name *.o | xargs rm -f
 

@@ -1,5 +1,5 @@
 //Includes
-#include "/home/erik/codee/openvoice/openvoice.h"
+#include "lar2rc.c"
 
 //Declarations
 const valarray<uint8_t> oktypes = {1,2,101,102};
