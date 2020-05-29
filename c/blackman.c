@@ -37,12 +37,14 @@ int blackman_s (float *X, const int L, const char normalize, const char exact)
 
     if (exact)
     {
-        while (l<L) { X[l] = 7938.0f/18608.0f - (9240.0f/18608.0f)*cosf(p*l) + (1430.0f/18608.0f)*cosf(2.0f*p*l); l++; }
+        while (l<L/2) { X[l] = 7938.0f/18608.0f - (9240.0f/18608.0f)*cosf(p*l) + (1430.0f/18608.0f)*cosf(2.0f*p*l); l++; }
     }
     else
     {
-        while (l<L) { X[l] = 0.42f - 0.5f*cosf(p*l) + 0.08f*cosf(2.0f*p*l); l++; }
+        while (l<L/2) { X[l] = 0.42f - 0.5f*cosf(p*l) + 0.08f*cosf(2.0f*p*l); l++; }
     }
+    if (L%2) { X[l] = 1.0f; l++; }
+    while (l<L) { X[l] = X[L-l-1]; l++; }
 
     if (normalize)
     {
@@ -66,12 +68,14 @@ int blackman_d (double *X, const int L, const char normalize, const char exact)
 
     if (exact)
     {
-        while (l<L) { X[l] = 7938.0/18608.0 - (9240.0/18608.0)*cos(p*l) + (1430.0/18608.0)*cos(2.0*p*l); l++; }
+        while (l<L/2) { X[l] = 7938.0/18608.0 - (9240.0/18608.0)*cos(p*l) + (1430.0/18608.0)*cos(2.0*p*l); l++; }
     }
     else
     {
-        while (l<L) { X[l] = 0.42 - 0.5*cos(p*l) + 0.08*cos(2.0*p*l); l++; }
+        while (l<L/2) { X[l] = 0.42 - 0.5*cos(p*l) + 0.08*cos(2.0*p*l); l++; }
     }
+    if (L%2) { X[l] = 1.0; l++; }
+    while (l<L) { X[l] = X[L-l-1]; l++; }
 
     if (normalize)
     {
@@ -95,20 +99,22 @@ int blackman_c (float *X, const int L, const char normalize, const char exact)
 
     if (exact)
     {
-        while (l<L) { X[2*l] = 7938.0f/18608.0f - (9240.0f/18608.0f)*cosf(p*l) + (1430.0f/18608.0f)*cosf(2.0f*p*l); l++; }
+        while (l<L/2) { X[2*l] = X[2*l+1] = 7938.0f/18608.0f - (9240.0f/18608.0f)*cosf(p*l) + (1430.0f/18608.0f)*cosf(2.0f*p*l); l++; }
     }
     else
     {
-        while (l<L) { X[2*l] = 0.42f - 0.5f*cosf(p*l) + 0.08f*cosf(2.0f*p*l); X[2*l+1] = 0.0f; l++; }
+        while (l<L/2) { X[2*l] = X[2*l+1] = 0.42f - 0.5f*cosf(p*l) + 0.08f*cosf(2.0f*p*l); l++; }
     }
+    if (L%2) { X[2*l] = X[2*l+1] = 1.0f; l++; }
+    while (l<L) { X[2*l] = X[2*l+1] = X[2*(L-l-1)]; l++; }
 
     if (normalize)
     {
         const float d = 1.0f;
         float sm = cblas_sdot(L,&X[0],2,&d,0);
-        cblas_sscal(L,1.0f/sm,&X[0],2);
+        cblas_sscal(2*L,1.0f/sm,&X[0],1);
         sm = cblas_sdot(L,&X[0],2,&d,0);
-        X[2*(L/2)] += 1.0f - sm;
+        X[2*(L/2)] += 1.0f - sm; X[2*(L/2)+1] += 1.0f - sm;
     }
 
     return 0;
@@ -124,20 +130,22 @@ int blackman_z (double *X, const int L, const char normalize, const char exact)
 
     if (exact)
     {
-        while (l<L) { X[2*l] = 7938.0/18608.0 - (9240.0/18608.0)*cos(p*l) + (1430.0/18608.0)*cos(2.0*p*l); X[2*l+1] = 0.0; l++; }
+        while (l<L/2) { X[2*l] = X[2*l+1] = 7938.0/18608.0 - (9240.0/18608.0)*cos(p*l) + (1430.0/18608.0)*cos(2.0*p*l); l++; }
     }
     else
     {
-        while (l<L) { X[2*l] = 0.42 - 0.5*cos(p*l) + 0.08*cos(2.0*p*l); X[2*l+1] = 0.0; l++; }
+        while (l<L/2) { X[2*l] = X[2*l+1] = 0.42 - 0.5*cos(p*l) + 0.08*cos(2.0*p*l); l++; }
     }
+    if (L%2) { X[2*l] = X[2*l+1] = 1.0; l++; }
+    while (l<L) { X[2*l] = X[2*l+1] = X[2*(L-l-1)]; l++; }
 
     if (normalize)
     {
         const double d = 1.0;
         double sm = cblas_ddot(L,&X[0],2,&d,0);
-        cblas_dscal(L,1.0/sm,&X[0],2);
+        cblas_dscal(2*L,1.0/sm,&X[0],1);
         sm = cblas_ddot(L,&X[0],2,&d,0);
-        X[2*(L/2)] += 1.0 - sm;
+        X[2*(L/2)] += 1.0 - sm; X[2*(L/2)+1] += 1.0 - sm;
     }
     
     return 0;

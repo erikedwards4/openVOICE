@@ -11,7 +11,7 @@
 
 SHELL=/bin/bash
 
-CC=g++
+CC=clang++
 
 ifeq ($(CC),$(filter $(CC),clang gcc))
 	STD=-std=c99
@@ -28,6 +28,16 @@ else
 endif
 
 CFLAGS=$(WFLAGS) -O3 $(STD) -march=native -fopenmp -fPIC
+
+
+#This works with clang++
+libopenvoice.a: all
+	ar crs ../lib/libopenvoice.a obj/*.o
+
+#This doesn't work due to multiple includes of cmp_ascend.c, etc.
+#This would require a return to an openvoice.h header.
+#libopenvoice.so: all
+#	$(CC) -shared -o ../lib/libopenvoice.so obj/*.o
 
 
 all: Basic DSP Pre Wins Freqs Window STFT Spectrogram CCs Deltas AR_Poly AC_LP LSF_LAR ZCs_LCs #Functionals
@@ -49,10 +59,10 @@ fir: fir.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
 iir: iir.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
 medfilt: medfilt.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
 
-Pre: rms_scale preemph #dither
+Pre: rms_scale preemph dither
 rms_scale: rms_scale.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
 preemph: preemph.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
-#dither: dither.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
+dither: dither.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)
 
 Wins: rectangular triangular bartlett hann hamming blackman blackmanharris flattop povey #tukey
 rectangular: rectangular.c; $(CC) -c $^ -o obj/$@.o $(CFLAGS)

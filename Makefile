@@ -6,7 +6,7 @@
 
 SHELL=/bin/bash
 
-ss=srci/srci2src
+ss=bin/srci2src
 
 CC=clang++
 STD=-std=c++11
@@ -24,8 +24,11 @@ CFLAGS=$(WFLAG) -O3 $(STD) -march=native -Ic
 #LIBS=-largtable2 -lopenblas -llapacke -llapack -lfftw3f -lfftw3 -lm
 
 
-openVOICE: Basic Pre Wins Freqs Window STFT Spectrogram CCs Deltas AR_Poly AC_LP LSF_LAR ZCs_LCs
+all: srci2src Basic Pre Wins Freqs Window STFT Spectrogram CCs Deltas AR_Poly AC_LP LSF_LAR ZCs_LCs
 	rm -f 7 obj/*.o
+
+srci2src: src/srci2src.cpp
+	$(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2
 
 
 Basic: mean0 stdev1 zscore abs square fft fir iir
@@ -47,7 +50,7 @@ iir: srci/iir.cpp c/iir.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
 
 
-Pre: preemph rms_scale #dither
+Pre: preemph rms_scale dither
 preemph: srci/preemph.cpp c/preemph.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2
 rms_scale: srci/rms_scale.cpp c/rms_scale.c
@@ -56,13 +59,13 @@ dither: srci/dither.cpp c/dither.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lm
 
 
-Wins: rectangular triangular bartlett hann hamming blackman blackmanharris flattop povey tukey
+Wins: rectangular triangular bartlett hann hamming blackman blackmanharris flattop povey gauss tukey planck
 rectangular: srci/rectangular.cpp c/rectangular.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
 triangular: srci/triangular.cpp c/triangular.c
-	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
 bartlett: srci/bartlett.cpp c/bartlett.c
-	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas
 hann: srci/hann.cpp c/hann.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
 hamming: srci/hamming.cpp c/hamming.c
@@ -75,7 +78,11 @@ flattop: srci/flattop.cpp c/flattop.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
 povey: srci/povey.cpp c/povey.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+gauss: srci/gauss.cpp c/gauss.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
 tukey: srci/tukey.cpp c/tukey.c
+	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
+planck: srci/planck.cpp c/planck.c
 	$(ss) -vd srci/$@.cpp > src/$@.cpp; $(CC) -c src/$@.cpp -oobj/$@.o $(CFLAGS); $(CC) obj/$@.o -obin/$@ -largtable2 -lopenblas -lm
 
 

@@ -3,8 +3,7 @@
 //where d is a dither weight, for which they suggest 0.1 or 1.0.
 
 //However, I don't currently know of a good random number generator for C.
-//So, here, I use drand48 and an idea from Knuth, which only requires
-//include <time.h>, which I have included anyway.
+//So, here, I use drand48 and an idea from Knuth, which only requires include <time.h>.
 //Turns out, this is identical to Kaldi (except more robust 1.0-drand48 within log).
 
 #include <stdio.h>

@@ -40,11 +40,10 @@ The later means that input/output can be piped directly to snippets of Python co
 
 
 ## Dependencies
-Requires argtable2, openBLAS and LAPACKE. For Ubuntu, these are available by apt-get:
+Requires argtable2, openBLAS, LAPACKE and FFTW3.
+For Ubuntu, these are available by apt-get:
 ```
-sudo apt-get install libargtable2-0
-sudo apt-get install libblas3 libopenblas-base
-sudo apt-get install liblapack3 liblapacke
+sudo apt-get install libargtable2-0 libblas3 libopenblas-base liblapack3 liblapacke fftw3
 ```
 
 
@@ -53,26 +52,29 @@ sudo apt-get install liblapack3 liblapacke
 cd /opt
 git clone https://github.com/erikedwards4/openvoice
 cd /opt/openvoice
-make -j4
+make
 ```
 
-Each C function can also be compiled separately; see C subdirectories for details.
-To make a shared object library, from /opt/openvoice do:
+Each C function can also be compiled separately; see c subdirectory Makefile for details.
+To make an archive library, do:
 ```
-make so
+cd /opt/openvoice/c
+make libopenvoice.a CC=clang
 ```
-This could be useful, for example, if trying to use the C functions in Python or one's own application.
+This creates /opt/openvoice/lib/libopenvoice.a with all of the C object files.
+This could be useful if trying to use the C functions in other applications.
+Change clang to clang++ to compile for use with C++ applications.
 
 
 ## Usage
 See each resulting command-line tool for help (use -h or --help option).
 For example:
 ```
-/opt/openvoice/stft --help
+/opt/openvoice/bin/stft --help
 ```
 Or:
 ```
-/opt/openvoice/mfcc --help
+/opt/openvoice/bin/mfcc --help
 ```
 
 

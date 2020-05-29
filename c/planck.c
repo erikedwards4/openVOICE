@@ -17,22 +17,23 @@ namespace ov {
 extern "C" {
 #endif
 
-int tukey_s (float *X, const int L, const float r, const char normalize);
-int tukey_d (double *X, const int L, const double r, const char normalize);
-int tukey_c (float *X, const int L, const float r, const char normalize);
-int tukey_z (double *X, const int L, const double r, const char normalize);
+int planck_s (float *X, const int L, const float epsilon, const char normalize);
+int planck_d (double *X, const int L, const double epsilon, const char normalize);
+int planck_c (float *X, const int L, const float epsilon, const char normalize);
+int planck_z (double *X, const int L, const double epsilon, const char normalize);
 
 
-int tukey_s (float *X, const int L, const float r, const char normalize)
+int planck_s (float *X, const int L, const float epsilon, const char normalize)
 {
-    const float p = 2.0f*M_PIf/((L-1)*r);
+    const float p = epsilon*L;
     int l = 0;
 
     //Checks
-    if (L<2) { fprintf(stderr,"error in tukey_s: L must be > 1 \n"); return 1; }
-    if (r<0.0f || r>1.0f) { fprintf(stderr,"error in tukey_s: r must be in [0.0 1.0] \n"); return 1; }
+    if (L<2) { fprintf(stderr,"error in planck_s: L must be > 1 \n"); return 1; }
+    if (epsilon<0.0f || epsilon>0.5f) { fprintf(stderr,"error in planck_s: epsilon must be in [0.0 0.5] \n"); return 1; }
 
-    while (l<0.5f*r*L) { X[l] = 0.5f - 0.5f*cosf(p*l); l++; }
+    X[l++] = 0.0f;
+    while (l<p && l<L/2) { X[l] = 1.0f/(1.0f+expf(p/l-p/(p-l))); l++; }
     while (l<L/2) { X[l] = 1.0f; l++; }
     if (L%2) { X[l] = 1.0f; l++; }
     while (l<L) { X[l] = X[L-l-1]; l++; }
@@ -50,16 +51,17 @@ int tukey_s (float *X, const int L, const float r, const char normalize)
 }
 
 
-int tukey_d (double *X, const int L, const double r, const char normalize)
+int planck_d (double *X, const int L, const double epsilon, const char normalize)
 {
-    const double p = 2.0*M_PI/((L-1)*r);
+    const double p = epsilon*L;
     int l = 0;
 
     //Checks
-    if (L<2) { fprintf(stderr,"error in tukey_d: L must be > 1 \n"); return 1; }
-    if (r<0.0 || r>1.0) { fprintf(stderr,"error in tukey_d: r must be in [0.0 1.0] \n"); return 1; }
+    if (L<2) { fprintf(stderr,"error in planck_d: L must be > 1 \n"); return 1; }
+    if (epsilon<0.0 || epsilon>0.5) { fprintf(stderr,"error in planck_d: epsilon must be in [0.0 0.5] \n"); return 1; }
 
-    while (l<0.5*r*L) { X[l] = 0.5 - 0.5*cos(p*l); l++; }
+    X[l++] = 0.0;
+    while (l<p && l<L/2) { X[l] = 1.0/(1.0+exp(p/l-p/(p-l))); l++; }
     while (l<L/2) { X[l] = 1.0; l++; }
     if (L%2) { X[l] = 1.0; l++; }
     while (l<L) { X[l] = X[L-l-1]; l++; }
@@ -77,16 +79,17 @@ int tukey_d (double *X, const int L, const double r, const char normalize)
 }
 
 
-int tukey_c (float *X, const int L, const float r, const char normalize)
+int planck_c (float *X, const int L, const float epsilon, const char normalize)
 {
-    const float p = 2.0f*M_PIf/((L-1)*r);
+    const float p = epsilon*L;
     int l = 0;
 
     //Checks
-    if (L<2) { fprintf(stderr,"error in tukey_c: L must be > 1 \n"); return 1; }
-    if (r<0.0f || r>1.0f) { fprintf(stderr,"error in tukey_c: r must be in [0.0 1.0] \n"); return 1; }
+    if (L<2) { fprintf(stderr,"error in planck_c: L must be > 1 \n"); return 1; }
+    if (epsilon<0.0f || epsilon>0.5f) { fprintf(stderr,"error in planck_c: epsilon must be in [0.0 0.5] \n"); return 1; }
 
-    while (l<0.5f*r*L) { X[2*l] = X[2*l+1] = 0.5f - 0.5f*cosf(p*l); l++; }
+    X[l++] = 0.0f; X[1] = 0.0f;
+    while (l<p && l<L/2) { X[2*l] = X[2*l+1] = 1.0f/(1.0f+expf(p/l-p/(p-l))); l++; }
     while (l<L/2) { X[2*l] = X[2*l+1] = 1.0f; l++; }
     if (L%2) { X[2*l] = X[2*l+1] = 1.0f; l++; }
     while (l<L) { X[2*l] = X[2*l+1] = X[2*(L-l-1)]; l++; }
@@ -104,16 +107,17 @@ int tukey_c (float *X, const int L, const float r, const char normalize)
 }
 
 
-int tukey_z (double *X, const int L, const double r, const char normalize)
+int planck_z (double *X, const int L, const double epsilon, const char normalize)
 {
-    const double p = 2.0*M_PI/((L-1)*r);
+    const double p = epsilon*L;
     int l = 0;
 
     //Checks
-    if (L<2) { fprintf(stderr,"error in tukey_z: L must be > 1 \n"); return 1; }
-    if (r<0.0 || r>1.0) { fprintf(stderr,"error in tukey_z: r must be in [0.0 1.0] \n"); return 1; }
+    if (L<2) { fprintf(stderr,"error in planck_z: L must be > 1 \n"); return 1; }
+    if (epsilon<0.0 || epsilon>0.5) { fprintf(stderr,"error in planck_z: epsilon must be in [0.0 0.5] \n"); return 1; }
 
-    while (l<0.5*r*L) { X[2*l] = X[2*l+1] = 0.5 - 0.5*cos(p*l); l++; }
+    X[l++] = 0.0; X[1] = 0.0;
+    while (l<p && l<L/2) { X[2*l] = X[2*l+1] = 1.0/(1.0+exp(p/l-p/(p-l))); l++; }
     while (l<L/2) { X[2*l] = X[2*l+1] = 1.0; l++; }
     if (L%2) { X[2*l] = X[2*l+1] = 1.0; l++; }
     while (l<L) { X[2*l] = X[2*l+1] = X[2*(L-l-1)]; l++; }
